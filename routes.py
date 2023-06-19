@@ -6,7 +6,7 @@ from flask_login import LoginManager, login_required, logout_user
 
 from env import GOOGLE_CLIENT_ID, GOOGLE_DISCOVERY_URL, GOOGLE_CLIENT_SECRET
 from references import GoogleDiscoveryKeys
-from user import User
+from controller import get_user_by_id
 
 routes = Blueprint('routes', __name__, url_prefix="/api")
 oauth_client = WebApplicationClient(GOOGLE_CLIENT_ID)
@@ -79,4 +79,4 @@ def logout():
 
 @login_manager.user_loader
 def load_user(id:int):
-    return User.get(id)
+    return get_user_by_id(id)
