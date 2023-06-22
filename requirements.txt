@@ -6,4 +6,4 @@ Flask-Login==0.6.2
 python-dotenv==1.0.0
 oauthlib==3.2.2
 psycopg2-binary==2.9.6
-flask_sqlalchemy==3.0.3
+flask-bcrypt==1.0.1

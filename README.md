@@ -14,15 +14,15 @@ To enable its power you must install <i>postgis</i> and <i>pgrouting</i> extensi
 You must install it on user's database:
 
 ```bash
-sudo -u postgres psql
+sudo su postgres psql
 ```
 
 ```sql
-CREATE DATABASE user_db;
+CREATE DATABASE <user_db>;
 
-ALTER DATABASE user_db SET search_path=public,postgis,contrib;
+ALTER DATABASE <user_db> SET search_path=public,postgis,contrib;
 
-\c user_db;
+\c <user_db>;
 
 CREATE SCHEMA postgis;
 
@@ -34,3 +34,8 @@ The last line should give you something like this:
 ```
  POSTGIS="3.2.1" [EXTENSION] PGSQL="140" GEOS="3.10.2-CAPI-1.16.0" PROJ="8.2.1" LIBXML="2.9.13" LIBJSON="0.15" LIBPROTOBUF="1.3.3" WAGYU="0.5.0 (Internal)"
  ```
+
+ <h4>PostGIS Resource</h4>
+ Please refer to:
+
+[Introduction of PostGIS](https://postgis.net/workshops/postgis-intro/index.html)
