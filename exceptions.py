@@ -7,7 +7,7 @@ class AppBaseException(Exception):
     def __repr__(self) -> str:
         return f"{self.message}"
 
-
+#TODO: Integrate error logging into the exceptions
 class ApiException(AppBaseException):
     def __init__(
             self, 
@@ -26,4 +26,9 @@ class IncompleteParams(ApiException):
 
 class UserAuthError(ApiException):
     def __init__(self, *args: object, reason: str, message = "Email or Password is incorrect") -> None:
+        super().__init__(*args, message=message, reason=reason)
+
+
+class CrudError(ApiException):
+    def __init__(self, *args: object, reason: str, message = "Operation Failure") -> None:
         super().__init__(*args, message=message, reason=reason)

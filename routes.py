@@ -1,14 +1,12 @@
-from typing import Any, Dict
 import requests
-from flask import Blueprint, current_app, make_response, jsonify, redirect, request, url_for
-from base64 import b16encode
+from flask import Blueprint, current_app, redirect, request, Request
 from oauthlib.oauth2 import WebApplicationClient
-from flask_login import LoginManager, login_required, logout_user
+from flask_login import LoginManager, login_required
 
 from env import GOOGLE_CLIENT_ID, GOOGLE_DISCOVERY_URL, GOOGLE_CLIENT_SECRET
 from references import GoogleDiscoveryKeys, GoogleAuthResponse
-from controller import get_user_by_jwt_token, conventional_user_auth, google_user_auth_or_create
-from exceptions import IncompleteParams
+from controller import create_litter_report, get_user_by_jwt_token, conventional_user_auth, google_user_auth_or_create, invalidate_token
+from exceptions import CrudError, IncompleteParams
 
 routes = Blueprint('routes', __name__, url_prefix="/api")
 oauth_client = WebApplicationClient(GOOGLE_CLIENT_ID)
@@ -75,10 +73,10 @@ def g_auth_callback():
 
 @routes.post(rule="/test-g-auth")
 def test_g_auth():
-    g_auth_response = GoogleAuthResponse(**request.json)
+    g_auth_response = GoogleAuthResponse(**request.get_json())
     token = google_user_auth_or_create(g_auth_response)
     return {
-        "api_token": token
+        "api_key": token
     }, 200
 
 
@@ -96,24 +94,59 @@ def auth():
             message="Email and/or password is missing"
             )
     return {
-        "api_token": token
+        "api_key": token
+    }, 200
+
+
+@routes.post("/report-littering")
+@login_required
+def report_littering():
+    #TODO: Validate the request also remove the api_key
+    payload = request.get_json()
+    del payload['api_key']
+    try:
+        create_litter_report(**payload)
+    except:
+        raise CrudError(
+            message="Report cannot be created", 
+            reason="report creation error"
+        )
+    return {
+        "message": "success"
     }, 200
     
 
+@routes.get("/logout")
 @login_required
-@routes.route("/logout")
 def logout():
-    # TODO: Custom Logout
-    logout_user()
-    return redirect(url_for("/"))
+    invalidate_token()
+    # return redirect(url_for("/"))
+    return {
+        "message": "Bye!"
+    }, 200
+
+
+@routes.post("/test")
+@login_required
+def test():
+    return {
+        "message": "It Works!"
+    }, 200
 
 
 @login_manager.request_loader
 def load_user_from_request(request):
-
-    # first, try to login using the api_key url arg
-    api_key = request.args.get('api_key')
+    api_key = get_token_from_request(request)
     if api_key:
         return get_user_by_jwt_token(token=api_key)
     # finally, return None if both methods did not login the user
     return None
+
+def get_token_from_request(request: Request):
+    if request.method == "GET":
+        api_key = request.args.get('api_key')
+    elif request.method == "POST" and request.is_json:
+        api_key = request.get_json().get('api_key')
+    else:
+        raise ValueError
+    return api_key

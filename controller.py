@@ -1,17 +1,23 @@
 import jwt
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from typing import Optional
-from flask_login import login_user
-from flask import has_app_context, current_app
+from typing import Optional, cast
+from flask_login import login_user, current_user
+from flask import has_app_context
 from datetime import datetime, timedelta
+from pymongo import MongoClient
 
-from models import Base, User, UserDetail, engine
+from models import Base, User, UserDetail, UserReport, engine
 from exceptions import UserAuthError
 from references import GoogleAuthResponse
 from utils import get_config
 
 session = Session(engine)
+
+mongo_client: MongoClient = MongoClient('localhost', 27017)
+#In mongodb, a database (db_name) is called/created using just mongo_client.db_name
+mongo_db = mongo_client.trash_heat
+comment_collection = mongo_db.user_comments
 
 def create_all_tables():
     Base.metadata.create_all(engine)
@@ -76,9 +82,6 @@ def google_user_auth_or_create(g_auth_response:GoogleAuthResponse):
 def create_user_detail(g_email_verified:bool | None = None, profile_pic: str | None = None):
     return UserDetail(g_email_verified=g_email_verified, profile_pic=profile_pic)
 
-def create_user_report(lat:float, lng:float, count:int=1, comment:str | None = None):
-    pass
-
 def encode_auth_token(user_id:int):
         """
         Generates the Auth Token
@@ -87,7 +90,7 @@ def encode_auth_token(user_id:int):
         # TODO: Add debug/test condition
         
         payload = {
-                'exp': datetime.utcnow() + timedelta(days=0, seconds=60),
+                'exp': datetime.utcnow() + timedelta(days=0, seconds=600),
                 'iat': datetime.utcnow(),
                 'sub': user_id
             }
@@ -104,7 +107,7 @@ def decode_auth_token(auth_token:str):
     :return: integer|string
     """
     try:
-        payload = jwt.decode(auth_token, get_config('SECRET_KEY'))
+        payload = jwt.decode(jwt=auth_token, key=get_config('SECRET_KEY'),algorithms=['HS256'])
         return payload['sub']
     except jwt.ExpiredSignatureError:
         raise UserAuthError(
@@ -122,7 +125,10 @@ def get_user_by_jwt_token(token:str):
     stmt = select(User).filter(User.id == user_id)
     user = session.scalar(stmt)
     if user is None or user.remember_token != token:
-        return None
+        raise UserAuthError(
+            message="Invalid token. Please log in again.",
+            reason="jwt invalid"
+        )
     return user
 
 def conventional_user_auth(email:str, password:str):
@@ -142,6 +148,29 @@ def create_token_login(user:User):
     else:
         print("Debugging")
     return token
+
+def invalidate_token():
+    user = cast(User,current_user)
+    user.remember_token = None
+    db_commit(user)
+
+def create_litter_report(lat:float, lng:float, count:int=1, comment:str | None = None):
+    user = cast(User,current_user)
+    #TODO: Basic sanitization
+    comment_ref_id = None
+    if comment is not None:
+        result = comment_collection.insert_one({
+            "user_id": user.id,
+            "type": "trash_report",
+            "body": comment
+        })
+        comment_ref_id = str(result.inserted_id)
+
+    user.reports.append(
+        UserReport(lat=lat, lng=lng, count=count, comment_ref_id= comment_ref_id)
+    )
+    db_commit(user)
+    
 
 def db_commit(*models: Base):
     session.add_all(models)

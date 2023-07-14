@@ -2,6 +2,7 @@ from flask import Flask
 from flask.app import Flask
 from flask_bcrypt import Bcrypt
 from flask.globals import g
+from flask_login import LoginManager
 # from flask.sessions import SecureCookieSessionInterface, SessionMixin
 
 from exceptions import AppBaseException, ApiException
@@ -9,6 +10,9 @@ from exceptions import AppBaseException, ApiException
 app = Flask(__name__)
 app.config.from_pyfile("conf.py")
 bcrypt = Bcrypt(app)
+
+login_manager = LoginManager()
+login_manager.init_app(app)
 
 # class CustomSession(SecureCookieSessionInterface):
 #     def should_set_cookie(self, app: Flask, session: SessionMixin) -> bool:
@@ -34,4 +38,4 @@ with app.app_context():
     app.register_blueprint(routes)
 
 if __name__ == "__main__":
-    app.run(debug=True, ssl_context='adhoc')
+    app.run(ssl_context='adhoc')

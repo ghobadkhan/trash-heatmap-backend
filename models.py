@@ -1,5 +1,5 @@
 import jwt
-from typing import Any, List, Type, cast
+from typing import Any, List, Optional, Type, cast
 from flask_login import UserMixin
 from flask import current_app
 from flask.globals import g
@@ -80,7 +80,7 @@ class User(Base, UserMixin):
     google_id: Mapped[str] = mapped_column(nullable=True, unique=True)
     first_name: Mapped[str] = mapped_column(String(50), nullable=True)
     last_name: Mapped[str] = mapped_column(String(50), nullable=True)
-    remember_token: Mapped[str] = mapped_column(String(256), nullable=True)
+    remember_token: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
 
     detail: Mapped["UserDetail"] = relationship(back_populates="user", cascade="all, delete-orphan")
     reports: Mapped[List["UserReport"]] = relationship(back_populates="user", cascade="all, delete-orphan")
