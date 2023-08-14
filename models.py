@@ -126,7 +126,7 @@ class UserReport(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey(f"{User.__tablename__}.id"))
     last_status: Mapped[EnumCol] = mapped_column(EnumCol(UserReportStatus), default=UserReportStatus.pending)
     lat: Mapped[float] = mapped_column(NUMERIC(precision=8,scale=6), nullable=False)
-    lng: Mapped[float] = mapped_column(NUMERIC(precision=8,scale=6), nullable=False)
+    lng: Mapped[float] = mapped_column(NUMERIC(precision=9,scale=6), nullable=False)
     radius: Mapped[int] = mapped_column(SMALLINT(), nullable=False, default=3)
     count: Mapped[int] = mapped_column(SMALLINT(),nullable=False, default=1)
     comment_ref_id: Mapped[str] = mapped_column(String(24), nullable=True)

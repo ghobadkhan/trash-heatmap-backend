@@ -126,14 +126,6 @@ def logout():
     }, 200
 
 
-@routes.post("/test")
-@login_required
-def test():
-    return {
-        "message": "It Works!"
-    }, 200
-
-
 @login_manager.request_loader
 def load_user_from_request(request):
     api_key = get_token_from_request(request)
