@@ -7,10 +7,10 @@ from flask import has_app_context
 from datetime import datetime, timedelta
 from pymongo import MongoClient
 
-from models import Base, User, UserDetail, UserReport, engine
-from exceptions import UserAuthError
-from references import GoogleAuthResponse
-from utils import get_config
+from .models import Base, User, UserDetail, UserReport, engine
+from .exceptions import UserAuthError
+from .references import GoogleAuthResponse
+from .utils import get_config
 
 session = Session(engine)
 

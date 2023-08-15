@@ -2,15 +2,17 @@ import requests
 from flask import Blueprint, current_app, redirect, request, Request
 from oauthlib.oauth2 import WebApplicationClient
 from flask_login import LoginManager, login_required
+import os
 
-from env import GOOGLE_CLIENT_ID, GOOGLE_DISCOVERY_URL, GOOGLE_CLIENT_SECRET
-from references import GoogleDiscoveryKeys, GoogleAuthResponse
-from controller import create_litter_report, get_user_by_jwt_token, conventional_user_auth, google_user_auth_or_create, invalidate_token
-from exceptions import CrudError, IncompleteParams
+
+from .references import GoogleDiscoveryKeys, GoogleAuthResponse
+from .controller import create_litter_report, get_user_by_jwt_token, conventional_user_auth, google_user_auth_or_create, invalidate_token
+from .exceptions import CrudError, IncompleteParams
 
 routes = Blueprint('routes', __name__, url_prefix="/api")
-oauth_client = WebApplicationClient(GOOGLE_CLIENT_ID)
-google_provider_cfg = requests.get(GOOGLE_DISCOVERY_URL).json()
+oauth_client = WebApplicationClient(os.environ["GOOGLE_CLIENT_ID"])
+assert os.getenv("GOOGLE_CLIENT_SECRET") is not None
+google_provider_cfg = requests.get(os.environ["GOOGLE_DISCOVERY_URL"]).json()
 # User session management setup
 # https://flask-login.readthedocs.io/en/latest
 login_manager = LoginManager()
@@ -51,7 +53,7 @@ def g_auth_callback():
         url=token_url,
         headers=headers,
         data=body,
-        auth=(GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET)
+        auth=(os.environ["GOOGLE_CLIENT_ID"],os.environ["GOOGLE_CLIENT_SECRET"])
     )
 
     parse_res = oauth_client.parse_request_body_response(token_response.content)
