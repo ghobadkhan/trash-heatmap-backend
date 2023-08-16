@@ -12,11 +12,11 @@ from sqlalchemy.orm import DeclarativeBase, mapped_column, relationship
 from sqlalchemy.orm.base import Mapped
 from sqlalchemy import types
 from sqlalchemy.ext.hybrid import hybrid_property
-from conf import SQLALCHEMY_DATABASE_URI
+# from conf import SQLALCHEMY_DATABASE_URI
 from enum import IntEnum, Enum
 from datetime import datetime, timedelta
 
-engine = create_engine(SQLALCHEMY_DATABASE_URI)
+engine = create_engine(current_app.config["SQLALCHEMY_DATABASE_URI"])
 # Session = sessionmaker(bind=engine)
 
 def get_crypt():
