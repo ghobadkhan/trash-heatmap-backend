@@ -1,16 +1,25 @@
 import jwt
-from sqlalchemy import select
+from sqlalchemy import select, create_engine, Engine
 from sqlalchemy.orm import Session
 from typing import Optional, cast
 from flask_login import login_user, current_user
-from flask import has_app_context
+from flask import has_app_context, current_app
 from datetime import datetime, timedelta
 from pymongo import MongoClient
+from werkzeug.local import LocalProxy
 
-from .models import Base, User, UserDetail, UserReport, engine
+from .models import Base, User, UserDetail, UserReport
 from .exceptions import UserAuthError
 from .references import GoogleAuthResponse
 from .utils import get_config
+
+def get_engine():
+    with current_app.app_context():
+        return create_engine(current_app.config["SQLALCHEMY_DATABASE_URI"])
+
+# engine = cast(Engine,LocalProxy(get_engine))
+
+engine = create_engine(current_app.config["SQLALCHEMY_DATABASE_URI"])
 
 session = Session(engine)
 
@@ -19,10 +28,10 @@ mongo_client: MongoClient = MongoClient('localhost', 27017)
 mongo_db = mongo_client.trash_heat
 comment_collection = mongo_db.user_comments
 
-def create_all_tables():
+def create_all_tables(engine=engine):
     Base.metadata.create_all(engine)
 
-def drop_all_tables():
+def drop_all_tables(engine=engine):
     Base.metadata.drop_all(engine)
 
 def get_user_by_email(email:str) -> User | None:

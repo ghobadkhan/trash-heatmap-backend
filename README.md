@@ -39,3 +39,22 @@ The last line should give you something like this:
  Please refer to:
 
 [Introduction of PostGIS](https://postgis.net/workshops/postgis-intro/index.html)
+
+<h2>Testing</h2>
+
+We use ``pytest``as the test suite.
+
+<h3>Pytest relative import problem</h3>
+
+There is a problem with pytest, that can't recognize relative the imports i.e. the way the app is structured,
+pytest won't find the imports from ``src`` by itself. The solution is to configure it. Thats why I added the following
+line to ``pyproject.toml``:
+
+```toml
+[tool.pytest.ini_options]
+pythonpath = [
+  "."
+]
+```
+
+For more info see [this](https://stackoverflow.com/a/50610630).

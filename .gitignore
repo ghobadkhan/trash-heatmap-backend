@@ -4,4 +4,6 @@ __pycache__
 conf.py
 env.py
 test*.*
+!/tests/*.py
 instance/
+.pytest_cache

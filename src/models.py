@@ -5,19 +5,15 @@ from flask import current_app
 from flask.globals import g
 from werkzeug.local import LocalProxy
 from flask_bcrypt import Bcrypt
-from sqlalchemy import String, create_engine, ForeignKey, NUMERIC, LargeBinary
+from sqlalchemy import String, ForeignKey, NUMERIC, LargeBinary
 from sqlalchemy.dialects.postgresql import SMALLINT, TIMESTAMP
 from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.orm import DeclarativeBase, mapped_column, relationship
 from sqlalchemy.orm.base import Mapped
 from sqlalchemy import types
 from sqlalchemy.ext.hybrid import hybrid_property
-# from conf import SQLALCHEMY_DATABASE_URI
 from enum import IntEnum, Enum
-from datetime import datetime, timedelta
-
-engine = create_engine(current_app.config["SQLALCHEMY_DATABASE_URI"])
-# Session = sessionmaker(bind=engine)
+from datetime import datetime
 
 def get_crypt():
     if 'crypt' not in g:

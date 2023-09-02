@@ -1,5 +1,5 @@
 import random
-from models import UserReport, engine
+from src.models import UserReport, engine
 from faker import Faker
 from sqlalchemy.orm import Session
 
