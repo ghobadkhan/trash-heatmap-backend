@@ -1,13 +1,28 @@
+import os
 import requests
-from flask import Blueprint, current_app, redirect, request, Request
+from flask import (
+    Blueprint,
+    current_app,
+    jsonify,
+    make_response,
+    redirect,
+    request,
+    Request,
+    session
+    )
 from oauthlib.oauth2 import WebApplicationClient
 from flask_login import LoginManager, login_required
-import os
-
 
 from .references import GoogleDiscoveryKeys, GoogleAuthResponse
-from .controller import create_litter_report, get_user_by_jwt_token, conventional_user_auth, google_user_auth_or_create, invalidate_token
+from .controller import (
+    create_litter_report, 
+    get_user_by_jwt_token, 
+    conventional_user_auth, 
+    google_user_auth_or_create, 
+    invalidate_token,
+    )
 from .exceptions import CrudError, IncompleteParams
+from ..utils import OauthObservable, ReceiverOauth
 
 routes = Blueprint('routes', __name__, url_prefix="/api")
 oauth_client = WebApplicationClient(os.environ["GOOGLE_CLIENT_ID"])
@@ -19,11 +34,22 @@ login_manager = LoginManager()
 login_manager.init_app(current_app)
 
 
-@routes.route('/')
+# TODO: Modify this
+@routes.get('/')
 def index():
-    return {
-        "result": "Yo"
-    } , 200
+    name = request.args.get("name")
+    if name is None:
+        return {"response": "Name is empty"}, 400
+    session["name"] = name
+    return {"response": "OK"}, 200
+
+# TODO: Remove this
+@routes.get('/get-session')
+def get_session():
+    # response = make_response(jsonify({}), 200)
+    # response.set_cookie("name","something")
+    name = session.get("name")
+    return {"name": name}, 200
 
 
 @routes.route("/g-auth")
@@ -34,7 +60,6 @@ def g_auth():
         redirect_uri=f"{request.base_url}/callback",
         scope=["openid", "email", "profile"]
     )
-    print(request_uri)
     return redirect(request_uri)
 
 @routes.route("/g-auth/callback")
@@ -73,15 +98,6 @@ def g_auth_callback():
 
 
 
-@routes.post(rule="/test-g-auth")
-def test_g_auth():
-    g_auth_response = GoogleAuthResponse(**request.get_json())
-    token = google_user_auth_or_create(g_auth_response)
-    return {
-        "api_key": token
-    }, 200
-
-
 @routes.post(rule="/auth")
 def auth():
     try:
@@ -108,10 +124,11 @@ def report_littering():
     del payload['api_key']
     try:
         create_litter_report(**payload)
-    except:
+    except Exception as e:
+        print(e)
         raise CrudError(
             message="Report cannot be created", 
-            reason="report creation error"
+            reason=str(e)
         )
     return {
         "message": "success"

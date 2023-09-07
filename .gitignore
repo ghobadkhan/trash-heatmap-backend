@@ -7,3 +7,4 @@ test*.*
 !/tests/*.py
 instance/
 .pytest_cache
+flask_session/

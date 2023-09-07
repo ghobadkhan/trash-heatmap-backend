@@ -4,5 +4,11 @@
         "cryptor",
         "pymongo",
         "sessionmaker"
-    ]
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.testing.autoTestDiscoverOnSaveEnabled": false,
+    "python.testing.pytestArgs": [
+        "-s"
+    ],
 }

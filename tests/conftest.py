@@ -1,14 +1,21 @@
 import pytest
+import os
+import sys
 from time import sleep
 from docker.models.containers import Container
 from docker import DockerClient
 from typing import cast
-from src import create_app
+from src.app import create_app
 
 
-def run_container(docker_base_url='unix:///home/arian/.docker/desktop/docker.sock') -> Container:
+def run_container(docker_base_url:str) -> Container:
     if docker_base_url =='env':
-        client = DockerClient.from_env()
+        # if env (default) is provided, it means that address to docker host is in the environment
+        # variables. This must be set in .env, key: DOCKER_HOST
+        if "DOCKER_HOST" in os.environ:
+            client = DockerClient.from_env()
+        else:
+            raise ValueError("The value of 'DOCKER_HOST' is not set in .env file!")
     else:
         client = DockerClient(base_url=docker_base_url)
     container = client.containers.run(
@@ -42,8 +49,9 @@ def pytest_addoption(parser):
 @pytest.fixture(scope='session')
 def app(pytestconfig):
     db_docker_url = pytestconfig.getoption('db_docker_url')
+    print(db_docker_url)
+    app = create_app()
     db_container = run_container(db_docker_url)
-    app = create_app(env='Test')
     app.config.update({
         "TESTING": True
     })
@@ -57,7 +65,7 @@ def client(app):
 @pytest.fixture(scope='session')
 def user(app):
     with app.app_context():
-        from src.controller import create_user, create_all_tables, session
+        from src.app.controller import create_user, create_all_tables
         create_all_tables()
         user = create_user(
             email="sag@email.com",
@@ -66,5 +74,4 @@ def user(app):
             passwd='123456'
         )
         yield user
-        session.close()
 

@@ -1,10 +1,10 @@
 import random
-from src.models import UserReport, engine
+from src.app.models import UserReport
 from faker import Faker
 from sqlalchemy.orm import Session
 
 loc_tolerance = 0.003
-session = Session(engine)
+
 fake = Faker()
 
 def generate_heat_map_data(n, lat, lng, weight):

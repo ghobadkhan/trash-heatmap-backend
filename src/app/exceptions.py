@@ -8,6 +8,11 @@ class AppBaseException(Exception):
         return f"{self.message}"
 
 #TODO: Integrate error logging into the exceptions
+"""
+Base class for all exceptions raised during an api call
+:param message: External message that shown to the api consumer
+:param reason: Internal message that log the detailed exception
+"""
 class ApiException(AppBaseException):
     def __init__(
             self, 

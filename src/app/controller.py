@@ -1,9 +1,9 @@
 import jwt
-from sqlalchemy import select, create_engine, Engine
+from sqlalchemy import select, create_engine
 from sqlalchemy.orm import Session
 from typing import Optional, cast
 from flask_login import login_user, current_user
-from flask import has_app_context, current_app
+from flask import has_app_context, current_app,g
 from datetime import datetime, timedelta
 from pymongo import MongoClient
 from werkzeug.local import LocalProxy
@@ -11,17 +11,16 @@ from werkzeug.local import LocalProxy
 from .models import Base, User, UserDetail, UserReport
 from .exceptions import UserAuthError
 from .references import GoogleAuthResponse
-from .utils import get_config
-
-def get_engine():
-    with current_app.app_context():
-        return create_engine(current_app.config["SQLALCHEMY_DATABASE_URI"])
-
-# engine = cast(Engine,LocalProxy(get_engine))
+from ..utils import get_config
 
 engine = create_engine(current_app.config["SQLALCHEMY_DATABASE_URI"])
 
-session = Session(engine)
+def get_db_session():
+    if 'db_session' not in g:
+        g.db_session = Session(engine)
+    return g.db_session
+
+session = cast(Session,LocalProxy(get_db_session))
 
 mongo_client: MongoClient = MongoClient('localhost', 27017)
 #In mongodb, a database (db_name) is called/created using just mongo_client.db_name
