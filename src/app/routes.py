@@ -12,6 +12,7 @@ from flask import (
     )
 from oauthlib.oauth2 import WebApplicationClient
 from flask_login import LoginManager, login_required
+from flask_socketio import emit
 
 from .references import GoogleDiscoveryKeys, GoogleAuthResponse
 from .controller import (
@@ -23,6 +24,7 @@ from .controller import (
     )
 from .exceptions import CrudError, IncompleteParams
 from ..utils import OauthObservable, ReceiverOauth
+from . import socketio
 
 routes = Blueprint('routes', __name__, url_prefix="/api")
 oauth_client = WebApplicationClient(os.environ["GOOGLE_CLIENT_ID"])
@@ -41,6 +43,13 @@ def index():
     if name is None:
         return {"response": "Name is empty"}, 400
     session["name"] = name
+    return {"response": "OK"}, 200
+
+# TODO: Remove this
+@routes.get("/test-socket")
+def test_socket():
+    ch = request.args.get("channel")
+    socketio.emit(ch,"I got you!")
     return {"response": "OK"}, 200
 
 # TODO: Remove this

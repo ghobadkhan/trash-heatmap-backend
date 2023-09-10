@@ -50,27 +50,34 @@ def pytest_addoption(parser):
 def app(pytestconfig):
     db_docker_url = pytestconfig.getoption('db_docker_url')
     print(db_docker_url)
-    app = create_app()
+    app,socketio = create_app()
     db_container = run_container(db_docker_url)
     app.config.update({
         "TESTING": True
     })
-    yield app
+    yield app,socketio
     db_container.stop()
 
 @pytest.fixture(scope='session')
 def client(app):
+    app = app[0]
     yield app.test_client()
 
 @pytest.fixture(scope='session')
+def socket_client(app):
+    socketio = app[1]
+    yield socketio.test_client(app[0])
+
+@pytest.fixture(scope='session')
 def user(app):
+    app = app[0]
     with app.app_context():
         from src.app.controller import create_user, create_all_tables
         create_all_tables()
         user = create_user(
-            email="sag@email.com",
-            first_name='Kian khan',
-            last_name='mostaravi',
+            email="test@email.com",
+            first_name='Test Name',
+            last_name='Test Family',
             passwd='123456'
         )
         yield user

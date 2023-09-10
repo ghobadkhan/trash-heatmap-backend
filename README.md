@@ -40,6 +40,16 @@ The last line should give you something like this:
 
 [Introduction of PostGIS](https://postgis.net/workshops/postgis-intro/index.html)
 
+<h3>Using Socket.IO</h3>
+
+I mainly use Socket.IO for sending the api token a goog authenticated client
+
+I use ``Flask-SocketIO`` ([Docs](https://flask-socketio.readthedocs.io/en/latest/index.html)) extension. There are few consideration for using this extension:
+
+- The application setup needs a bit of change as the extension wraps around the normal Flask app setup
+- There is no easy solution to test a socketio connection. However I managed to employ a bit hacky solution just to make sure the server runs.
+- The extension mainly uses ``eventlet`` to serve the application. However it is recommended to use ``gunicorn`` in the production environment and avoid using the eventlet alone.
+
 <h2>Testing</h2>
 
 We use ``pytest``as the test suite.
