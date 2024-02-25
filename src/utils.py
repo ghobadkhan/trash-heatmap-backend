@@ -49,11 +49,11 @@ class OauthObservable(Observable):
         id = observer.get_id()
         self.observers.pop(id)
 
-    def notify(self, id:str, api_key:str):
+    def notify(self, id:str, api_token:str):
         observer = self.observers.get(id)
         if observer is not None:
             self.unsubscribe(observer)
-            observer.update(api_key=api_key)
+            observer.update(api_token=api_token)
 
 class ReceiverOauth(Observer):
     def __init__(self, session_id:str) -> None:
@@ -63,9 +63,9 @@ class ReceiverOauth(Observer):
         return self.session_id
     
     def update(self, **kwargs):
-        api_key = kwargs['api_key']
-        print(api_key)
-        return api_key
+        api_token = kwargs['api_token']
+        print(api_token)
+        return api_token
 
         
     

@@ -10,8 +10,8 @@ def test_oauth_observable():
     oauth_observable.subscribe(session_a)
     oauth_observable.subscribe(session_b)
 
-    oauth_observable.notify(id='a',api_key='NO')
-    oauth_observable.notify(id='b',api_key='YES')
+    oauth_observable.notify(id='a',api_token='NO')
+    oauth_observable.notify(id='b',api_token='YES')
 
 def test_socket_broadcast(socket_client:SocketIOTestClient):
     @socket_client.socketio.on('my_event')

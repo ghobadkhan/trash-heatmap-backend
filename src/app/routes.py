@@ -1,18 +1,15 @@
 import os
 import requests
+from uuid import uuid1
+from functools import wraps
 from flask import (
     Blueprint,
-    current_app,
-    jsonify,
-    make_response,
-    redirect,
     request,
     Request,
     session
     )
 from oauthlib.oauth2 import WebApplicationClient
-from flask_login import LoginManager, login_required
-from flask_socketio import emit
+from flask_login import login_required
 
 from .references import GoogleDiscoveryKeys, GoogleAuthResponse
 from .controller import (
@@ -22,22 +19,34 @@ from .controller import (
     google_user_auth_or_create, 
     invalidate_token,
     )
-from .exceptions import CrudError, IncompleteParams
-from ..utils import OauthObservable, ReceiverOauth
-from . import socketio
+from ..exceptions import CrudError, IncompleteParams
+from . import socketio, login_manager
+from ..data_structures import LitterForm
 
 routes = Blueprint('routes', __name__, url_prefix="/api")
 oauth_client = WebApplicationClient(os.environ["GOOGLE_CLIENT_ID"])
 assert os.getenv("GOOGLE_CLIENT_SECRET") is not None
 google_provider_cfg = requests.get(os.environ["GOOGLE_DISCOVERY_URL"]).json()
-# User session management setup
-# https://flask-login.readthedocs.io/en/latest
-login_manager = LoginManager()
-login_manager.init_app(current_app)
 
+@login_manager.request_loader
+def load_user_from_request(request):
+    api_token = get_token_from_request(request)
+    if api_token:
+        return get_user_by_jwt_token(token=api_token)
+    return None
 
-# TODO: Modify this
-@routes.get('/')
+def get_token_from_request(request: Request):
+    return request.headers.get('api_token')
+
+def is_env_test(func):
+    @wraps(func)
+    def inner(*args,**kwargs):
+        assert os.getenv("FLASK_ENV") == "Test"
+        return func(*args,**kwargs)
+    return inner
+
+@routes.get('/test')
+@is_env_test
 def index():
     name = request.args.get("name")
     if name is None:
@@ -45,35 +54,40 @@ def index():
     session["name"] = name
     return {"response": "OK"}, 200
 
-# TODO: Remove this
-@routes.get("/test-socket")
+@routes.get("/test/test-socket")
+@is_env_test
 def test_socket():
     ch = request.args.get("channel")
     socketio.emit(ch,"I got you!")
     return {"response": "OK"}, 200
 
-# TODO: Remove this
-@routes.get('/get-session')
+@routes.get('/test/get-session')
+@is_env_test
 def get_session():
-    # response = make_response(jsonify({}), 200)
-    # response.set_cookie("name","something")
     name = session.get("name")
     return {"name": name}, 200
 
 
-@routes.route("/g-auth")
+@routes.get("/g-auth")
 def g_auth():
+    user_state = uuid1()
     authorization_endpoint = google_provider_cfg[GoogleDiscoveryKeys.AUTH_ENDPOINT]
     request_uri = oauth_client.prepare_request_uri(
         uri=authorization_endpoint,
-        redirect_uri=f"{request.base_url}/callback",
-        scope=["openid", "email", "profile"]
+        redirect_uri=f"https://127.0.0.1:5000/api/g-auth/callback",
+        scope=["openid", "email", "profile"],
+        state=user_state
     )
-    return redirect(request_uri)
+    return {
+        "response": "OK",
+        "user_state": user_state,
+        "redirect_uri": request_uri
+    }, 200
 
-@routes.route("/g-auth/callback")
+@routes.get("/g-auth/callback")
 def g_auth_callback():
     auth_code = request.args.get("code")
+    user_state = request.args.get("state")
     assert auth_code is not None
     token_endpoint = google_provider_cfg[GoogleDiscoveryKeys.TOKEN_ENDPOINT]
     token_url, headers, body = oauth_client.prepare_token_request(
@@ -90,8 +104,7 @@ def g_auth_callback():
         auth=(os.environ["GOOGLE_CLIENT_ID"],os.environ["GOOGLE_CLIENT_SECRET"])
     )
 
-    parse_res = oauth_client.parse_request_body_response(token_response.content)
-    print(parse_res)
+    oauth_client.parse_request_body_response(token_response.content)
 
     userinfo_endpoint = google_provider_cfg[GoogleDiscoveryKeys.USERINFO_ENDPOINT]
 
@@ -101,8 +114,15 @@ def g_auth_callback():
 
     g_auth_response = GoogleAuthResponse(**userinfo_response.json())
     token = google_user_auth_or_create(g_auth_response)
-    return {
+    print(f"sending info to: {user_state}")
+    socketio.emit(
+        user_state, 
+        data={
+        "response": "authenticated",
         "api_token": token
+    })
+    return {
+        "response": "OK"
     }, 200
 
 
@@ -121,18 +141,17 @@ def auth():
             message="Email and/or password is missing"
             )
     return {
-        "api_key": token
+        "api_token": token
     }, 200
 
 
-@routes.post("/report-littering")
+@routes.post("/report-litter")
 @login_required
 def report_littering():
-    #TODO: Validate the request also remove the api_key
-    payload = request.get_json()
-    del payload['api_key']
+    #TODO: Validate the request also remove the api_token
+    form = LitterForm(**request.get_json())
     try:
-        create_litter_report(**payload)
+        create_litter_report(form)
     except Exception as e:
         print(e)
         raise CrudError(
@@ -152,21 +171,3 @@ def logout():
     return {
         "message": "Bye!"
     }, 200
-
-
-@login_manager.request_loader
-def load_user_from_request(request):
-    api_key = get_token_from_request(request)
-    if api_key:
-        return get_user_by_jwt_token(token=api_key)
-    # finally, return None if both methods did not login the user
-    return None
-
-def get_token_from_request(request: Request):
-    if request.method == "GET":
-        api_key = request.args.get('api_key')
-    elif request.method == "POST" and request.is_json:
-        api_key = request.get_json().get('api_key')
-    else:
-        raise ValueError
-    return api_key

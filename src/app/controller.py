@@ -9,9 +9,10 @@ from pymongo import MongoClient
 from werkzeug.local import LocalProxy
 
 from .models import Base, User, UserDetail, UserReport
-from .exceptions import UserAuthError
+from ..exceptions import UserAuthError
 from .references import GoogleAuthResponse
 from ..utils import get_config
+from ..data_structures import LitterForm
 
 engine = create_engine(current_app.config["SQLALCHEMY_DATABASE_URI"])
 
@@ -162,20 +163,20 @@ def invalidate_token():
     user.remember_token = None
     db_commit(user)
 
-def create_litter_report(lat:float, lng:float, count:int=1, comment:str | None = None):
+def create_litter_report(form: LitterForm):
     user = cast(User,current_user)
     #TODO: Basic sanitization
     comment_ref_id = None
-    if comment is not None:
+    if form.comment is not None:
         result = comment_collection.insert_one({
             "user_id": user.id,
             "type": "trash_report",
-            "body": comment
+            "body": form.comment
         })
         comment_ref_id = str(result.inserted_id)
 
     user.reports.append(
-        UserReport(lat=lat, lng=lng, count=count, comment_ref_id= comment_ref_id)
+        UserReport(lat=form.lat, lng=form.lng, count=form.count, comment_ref_id= comment_ref_id)
     )
     db_commit(user)
     

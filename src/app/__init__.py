@@ -1,12 +1,12 @@
 import os
-from flask import Flask, Response, g
+from flask import Flask, g
 from flask_login import LoginManager
 from flask_session import Session # type: ignore
 from dotenv import load_dotenv
 from flask_socketio import SocketIO, send
 # from flask.sessions import SecureCookieSessionInterface, SessionMixin
 
-from .exceptions import AppBaseException, ApiException
+from ..exceptions import AppBaseException, ApiException
 
 login_manager = LoginManager()
 session = Session()

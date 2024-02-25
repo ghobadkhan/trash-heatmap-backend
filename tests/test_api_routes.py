@@ -21,31 +21,33 @@ def test_auth(user:User, client:FlaskClient):
 
 def test_report_litter(user:User, client:FlaskClient):
     request = {
-        "api_key": user.remember_token,
         "lat": 39.2344,
         "lng": 20.543,
         "count": 666,
         "comment": "Sooo fucking disgusting!"
     }
-    response = client.post("api/report-littering",json=request)
+    headers = {
+        "api_token": user.remember_token
+    }
+    response = client.post("api/report-littering",json=request, headers=headers)
     assert response.status_code == 200
     assert response.is_json
 
 def test_logout(user:User, client:FlaskClient):
-    request = {
-        "api_key": user.remember_token
+    headers = {
+        "api_token": user.remember_token
     }
 
-    response = client.get("api/logout",query_string=request)
+    response = client.get("api/logout",headers=headers)
     assert response.status_code == 200
     assert user.remember_token is None
 
 
 def test_session(client:FlaskClient):
     name = "test_anon"
-    response = client.get("api/", query_string={"name":name})
+    response = client.get("api/test", query_string={"name":name})
     assert response.status_code == 200
-    response = client.get("api/get-session")
+    response = client.get("api/test/get-session")
     assert response.is_json
     data = response.get_json()
     assert data["name"] == name

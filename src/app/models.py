@@ -5,12 +5,11 @@ from flask import current_app
 from flask.globals import g
 from werkzeug.local import LocalProxy
 from flask_bcrypt import Bcrypt
-from sqlalchemy import String, ForeignKey, NUMERIC, LargeBinary
+from sqlalchemy import String, ForeignKey, NUMERIC, LargeBinary, types, func
 from sqlalchemy.dialects.postgresql import SMALLINT, TIMESTAMP
 from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.orm import DeclarativeBase, mapped_column, relationship
 from sqlalchemy.orm.base import Mapped
-from sqlalchemy import types
 from sqlalchemy.ext.hybrid import hybrid_property
 from enum import IntEnum, Enum
 from datetime import datetime
@@ -126,6 +125,6 @@ class UserReport(Base):
     radius: Mapped[int] = mapped_column(SMALLINT(), nullable=False, default=3)
     count: Mapped[int] = mapped_column(SMALLINT(),nullable=False, default=1)
     comment_ref_id: Mapped[str] = mapped_column(String(24), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(),nullable=False, default=datetime.now())
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(),nullable=False, default=func.now())
 
     user: Mapped["User"] = relationship(back_populates="reports")
