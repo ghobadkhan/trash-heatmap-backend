@@ -3,6 +3,40 @@
 <h2>Development</h2>
 <h3>Running Flask in Test mode</h3>
 <code>flask run --cert="adhoc" --debug</code>
+
+*UPDATE: Since I've added socket.io to the server, I no longer use the above code. For now see run.py where I directly invoke flask-socketio's run method*
+
+<h2>The File Structure</h2>
+
+The following shows the main structure. Everything else outside of this structure is temp/unimportant
+
+```
+project
+│   README.md
+│   run.py --> runs the socket.io which in turn runs the entire server 
+|   requirements.txt   
+|   .gitignore
+|   LICENSE
+|   pyproject.toml  --> Is needed for now to set up some options related to testing   
+│
+└───src --> In it's base, contains auxiliary files. e.g:
+│   │   utils.py
+│   │   ...
+│   │
+│   └───app --> Contains the core backend files. e.g:
+│       │   controller.py
+│       │   ...
+│   
+└───instance --> Temporary(ish) instance related folder which contains .env file, conf file, etc
+|   │   .env  --> This the runtime environment file
+|   │   conf.py --> To configure the backend on each type of environment (Dev,Test,Prod) it's more convenient to use this file
+|   |   ...
+│   
+└───tests
+    │   conftest.py  --> Major test set-up file 
+    │   ...
+```
+
 <h3>Using PostgreSQL to handle geospatial data</h3>
 PostgreSQL is powerful enough to save and query geospatial data
 To enable its power you must install <i>postgis</i> and <i>pgrouting</i> extensions. Follow: 

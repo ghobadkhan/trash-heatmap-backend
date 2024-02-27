@@ -9,4 +9,6 @@ if __name__ == "__main__":
         app=app, 
         log_output=True, 
         debug=True, 
-        certfile=f"{instance}/cert.pem", keyfile=f"{instance}/key.pem")
+        use_reloader=True,
+        certfile=f"{instance}/cert.pem", 
+        keyfile=f"{instance}/key.pem")
