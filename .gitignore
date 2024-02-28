@@ -1,10 +1,9 @@
 venv/
 __pycache__
-.env
-conf.py
 env.py
 test*.*
 !/tests/*.py
+!test_requests.http
 instance/
 .pytest_cache
 flask_session/

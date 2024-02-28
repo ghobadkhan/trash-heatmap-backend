@@ -1,0 +1,55 @@
+# Send the rest requests using this add-on: Name: REST Client (humao.rest-client)
+
+### Normal Auth
+# @name normal_auth
+POST https://localhost:5000/api/auth HTTP/1.1
+content-type: application/json
+
+{
+    "email": "test@email.com",
+    "password": "123456"
+}
+
+###
+
+@token = {{normal_auth.response.body.api_token}}
+
+###
+
+POST https://localhost:5000/api/test-g-auth HTTP/1.1
+content-type: application/json
+api-token: {{token}}
+
+{
+    "email":"meee2@email.com",
+    "sub":"134356456466", 
+    "email_verified":true
+}
+
+###
+
+POST https://localhost:5000/api/test HTTP/1.1
+content-type: application/json
+api-token: {{token}}
+
+{
+    "api_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2ODkyODgwODUsImlhdCI6MTY4OTI4NzQ4NSwic3ViIjoyfQ.beUQhx1-lJKiMQOkiq1QW28g4bm95hZyyaqr15zkJrg"
+}
+
+###
+
+GET  https://localhost:5000/api/logout
+    ?api_key={{token}}
+
+###
+
+POST https://localhost:5000/api/report-litter HTTP/1.1
+content-type: application/json
+api-token: {{token}}
+
+{
+    "lat": 39.2344,
+    "lng": 20.543,
+    "count": 666,
+    "comment": "Sooo fucking disgusting!"
+}

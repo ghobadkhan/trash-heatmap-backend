@@ -1,12 +1,12 @@
-<h1>Toronto Trash Heatmap</h1>
+# Toronto Trash Heatmap
 
-<h2>Development</h2>
-<h3>Running Flask in Test mode</h3>
+## Development
+### Running Flask in Test mode
 <code>flask run --cert="adhoc" --debug</code>
 
 *UPDATE: Since I've added socket.io to the server, I no longer use the above code. For now see run.py where I directly invoke flask-socketio's run method*
 
-<h2>The File Structure</h2>
+### The File Structure 
 
 The following shows the main structure. Everything else outside of this structure is temp/unimportant
 
@@ -17,6 +17,7 @@ project
 |   requirements.txt   
 |   .gitignore
 |   LICENSE
+|   test_requests.http
 |   pyproject.toml  --> Is needed for now to set up some options related to testing   
 │
 └───src --> In it's base, contains auxiliary files. e.g:
@@ -27,24 +28,27 @@ project
 │       │   controller.py
 │       │   ...
 │   
-└───instance --> Temporary(ish) instance related folder which contains .env file, conf file, etc
+└───instance --> Temporary(ish) instance related folder which contains .env file, conf file, etc. DO NOT TRACK THIS FOLDER
 |   │   .env  --> This the runtime environment file
 |   │   conf.py --> To configure the backend on each type of environment (Dev,Test,Prod) it's more convenient to use this file
 |   |   ...
 │   
+└───instance.example --> Sample of the files that you put in the instance folder
+|   |   ...
+|
 └───tests
     │   conftest.py  --> Major test set-up file 
     │   ...
 ```
 
-<h3>Using PostgreSQL to handle geospatial data</h3>
+#### Using PostgreSQL to handle geospatial data
 PostgreSQL is powerful enough to save and query geospatial data
 To enable its power you must install <i>postgis</i> and <i>pgrouting</i> extensions. Follow: 
 
 [Postgis installation](https://trac.osgeo.org/postgis/wiki/UsersWikiPostGIS3UbuntuPGSQLApt)
 
-<h4>Setup database to use postgis<h4>
-<b>Never install postgis on the default postgresql db!</b>
+##### Setup database to use postgis
+Never install postgis on the default postgresql db!
 You must install it on user's database:
 
 ```bash
@@ -74,7 +78,7 @@ The last line should give you something like this:
 
 [Introduction of PostGIS](https://postgis.net/workshops/postgis-intro/index.html)
 
-<h3>Using Socket.IO</h3>
+#### Using Socket.IO
 
 I mainly use Socket.IO for sending the api token a goog authenticated client
 
@@ -84,11 +88,21 @@ I use ``Flask-SocketIO`` ([Docs](https://flask-socketio.readthedocs.io/en/latest
 - There is no easy solution to test a socketio connection. However I managed to employ a bit hacky solution just to make sure the server runs.
 - The extension mainly uses ``eventlet`` to serve the application. However it is recommended to use ``gunicorn`` in the production environment and avoid using the eventlet alone.
 
-<h2>Testing</h2>
+### Troubleshooting
+
+#### Tests related to form saving request fail
+Since the comments are saved in MongoDB, check to see if you have MongoDB running. This is a cause of big failure.
+
+#### I'm getting CORS error on the browser
+If on the front-end you set everything right, then the problem is probably because of socket-io implementation. You might have implemented it using a wrong url. Check this parameter: ```cors_allowed_origins```
+
+Also, If you're testing backend and frontend on your local, not only you should make an exception for the backend base url in the browser, but also the url: ```https://<base>/socket.io/...``` must be added to the exceptions. Clicking on the error log in the browser consol should take you to this link and fix it.
+
+## Testing
 
 We use ``pytest``as the test suite.
 
-<h3>Pytest relative import problem</h3>
+### Pytest relative import problem
 
 There is a problem with pytest, that can't recognize relative the imports i.e. the way the app is structured,
 pytest won't find the imports from ``src`` by itself. The solution is to configure it. Thats why I added the following
@@ -102,3 +116,12 @@ pythonpath = [
 ```
 
 For more info see [this](https://stackoverflow.com/a/50610630).
+
+### PostgreSQL test DB
+To test out models and to make sure that I don't touch the system's postgres, I used docker image ```postgres:latest``` and set up the database into that.
+
+You need to:
+1. Locate the address of your current docker instance.
+2. Download the ```postgres:latest``` image.
+3. Make sure that docker client for python is installed (included in requirements.txt).
+4. Set-up the container using the proper environment variable and other vars (see [conftest.py](tests/conftest.py)).

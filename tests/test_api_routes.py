@@ -29,7 +29,7 @@ def test_report_litter(user:User, client:FlaskClient):
     headers = {
         "api_token": user.remember_token
     }
-    response = client.post("api/report-littering",json=request, headers=headers)
+    response = client.post("api/report-litter",json=request, headers=headers)
     assert response.status_code == 200
     assert response.is_json
 
