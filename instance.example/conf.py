@@ -1,5 +1,5 @@
 import os
-# This file configures the server based on the running envoronment that's set in .env
+# This file configures the server based on the running environment that's set in .env
 class Config(object):
     TESTING = False
     SESSION_TYPE = 'filesystem'
